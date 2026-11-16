@@ -1,0 +1,91 @@
+@baseUrl = http://localhost:8081
+@serviceOrderId = 00000000-0000-0000-0000-000000000001
+@correlationId = 00000000-0000-0000-0000-000000000002
+
+### Health
+GET {{baseUrl}}/health
+
+### Register catalog service
+POST {{baseUrl}}/catalog/services
+Content-Type: application/json
+
+{
+  "description": "Diagnóstico",
+  "price": 100.00,
+  "estimatedTime": 2
+}
+
+### Register catalog product and stock
+POST {{baseUrl}}/catalog/products
+Content-Type: application/json
+
+{
+  "description": "Filtro de óleo",
+  "price": 35.00,
+  "initialQuantity": 10
+}
+
+### List catalog services
+GET {{baseUrl}}/catalog/services
+
+### Update catalog service
+PUT {{baseUrl}}/catalog/services/00000000-0000-0000-0000-000000000003
+Content-Type: application/json
+
+{
+  "description": "Diagnóstico completo",
+  "price": 120.00,
+  "estimatedTime": 2.5
+}
+
+### List catalog products
+GET {{baseUrl}}/catalog/products
+
+### Get inventory
+GET {{baseUrl}}/inventory/00000000-0000-0000-0000-000000000004
+
+### Update inventory
+PUT {{baseUrl}}/inventory/00000000-0000-0000-0000-000000000004
+Content-Type: application/json
+
+{
+  "quantity": 20
+}
+
+### Create quote
+POST {{baseUrl}}/quotes
+Content-Type: application/json
+
+{
+  "serviceOrderId": "{{serviceOrderId}}",
+  "amount": 250.00,
+  "correlationId": "{{correlationId}}"
+}
+
+### Reject quote and release reserved stock
+POST {{baseUrl}}/quotes/{{serviceOrderId}}/reject
+Content-Type: application/json
+
+{
+  "reason": "Cliente não aprovou o orçamento",
+  "correlationId": "{{correlationId}}"
+}
+
+### Approve quote
+POST {{baseUrl}}/quotes/{{serviceOrderId}}/approve
+Content-Type: application/json
+
+{
+  "correlationId": "{{correlationId}}"
+}
+
+### Create sandbox payment
+POST {{baseUrl}}/payments
+Content-Type: application/json
+
+{
+  "serviceOrderId": "{{serviceOrderId}}",
+  "amount": 250.00,
+  "token": "sandbox-token",
+  "correlationId": "{{correlationId}}"
+}
