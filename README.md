@@ -70,7 +70,7 @@ Tabelas principais: `quotes`, `quote_items`, `catalog_services`,
 
 O projeto possui testes automatizados com foco nos **domínios críticos**.
 
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=kmlyteixeira_garage-management-api-dotnet&metric=coverage&token=ad876c9d0e30de7ccbbf7e98df620074ea2c6202)](https://sonarcloud.io/summary/new_code?id=kmlyteixeira_garage-management-billing-service)
+<img width="574" height="170" alt="BillingService" src="https://github.com/user-attachments/assets/830b4925-f980-466a-bf2b-91155ef0aafd" />
 
 Testes automatizados:
 
