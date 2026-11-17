@@ -30,7 +30,7 @@ resource "kubernetes_deployment_v1" "service" {
       type = "RollingUpdate"
       rolling_update {
         max_surge       = "1"
-        max_unavailable = "1"
+        max_unavailable = "0"
       }
     }
     template {

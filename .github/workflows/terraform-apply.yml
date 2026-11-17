@@ -48,6 +48,19 @@ jobs:
             --name "$TF_VAR_cluster_name" \
             --region "$TF_VAR_region"
           kubectl cluster-info
+      - name: Check schedulable Kubernetes capacity
+        run: |
+          set -euo pipefail
+          kubectl get nodes -o wide
+          schedulable_ready_nodes="$(
+            kubectl get nodes --no-headers |
+              awk '$2 ~ /^Ready/ && $2 !~ /SchedulingDisabled/ { count++ } END { print count + 0 }'
+          )"
+          if [ "$schedulable_ready_nodes" -lt 1 ]; then
+            echo "::error::No schedulable Ready nodes are available in the EKS cluster."
+            kubectl describe nodes || true
+            exit 1
+          fi
       - name: Migrate deployment state identity
         run: |
           if terraform state list | grep -Fxq "kubernetes_deployment_v1.service"; then
