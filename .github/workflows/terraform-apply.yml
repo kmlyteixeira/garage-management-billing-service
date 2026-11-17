@@ -16,9 +16,9 @@ jobs:
       run:
         working-directory: infra
     env:
-      TF_VAR_region: ${{ vars.AWS_REGION }}
+      TF_VAR_region: ${{ vars.AWS_REGION || 'us-east-1' }}
       TF_VAR_project_name: garage-management
-      TF_VAR_environment: ${{ vars.TERRAFORM_ENVIRONMENT }}
+      TF_VAR_environment: ${{ vars.TERRAFORM_ENVIRONMENT || 'homologacao' }}
     steps:
       - uses: actions/checkout@v4
       - uses: hashicorp/setup-terraform@v3
@@ -27,12 +27,25 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
       - name: Load platform parameters
         run: |
-          echo "TF_VAR_cluster_name=$(aws ssm get-parameter --name "/garage-management/${TF_VAR_environment}/platform/cluster-name" --query Parameter.Value --output text)" >> "$GITHUB_ENV"
-          echo "TF_CLI_ARGS_init=-backend-config=bucket=$(aws ssm get-parameter --name "/garage-management/${TF_VAR_environment}/platform/service-state-bucket" --query Parameter.Value --output text) -backend-config=key=billing/terraform.tfstate -backend-config=region=${TF_VAR_region}" >> "$GITHUB_ENV"
-      - run: terraform init
+          set -euo pipefail
+          cluster_name="$(aws ssm get-parameter \
+            --name "/${TF_VAR_project_name}/${TF_VAR_environment}/platform/cluster-name" \
+            --query Parameter.Value --output text)"
+          state_bucket="$(aws ssm get-parameter \
+            --name "/${TF_VAR_project_name}/${TF_VAR_environment}/platform/service-state-bucket" \
+            --query Parameter.Value --output text)"
+          test -n "$cluster_name" && test "$cluster_name" != "None"
+          test -n "$state_bucket" && test "$state_bucket" != "None"
+          echo "TF_VAR_cluster_name=$cluster_name" >> "$GITHUB_ENV"
+          echo "Terraform environment: $TF_VAR_environment"
+          echo "Terraform state bucket: $state_bucket"
+          echo "Terraform cluster: $cluster_name"
+          echo "TF_STATE_BUCKET=$state_bucket" >> "$GITHUB_ENV"
+      - name: Initialize Terraform
+        run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=billing/terraform.tfstate" -backend-config="region=${TF_VAR_region}"
       - name: Migrate deployment state identity
         run: |
           if terraform state list | grep -Fxq "kubernetes_deployment_v1.service"; then
