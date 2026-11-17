@@ -41,6 +41,13 @@ jobs:
           echo "Terraform cluster: $cluster_name"
       - name: Initialize Terraform
         run: terraform init -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="key=billing/terraform.tfstate" -backend-config="region=${TF_VAR_region}"
+      - uses: azure/setup-kubectl@v4
+      - name: Configure Kubernetes access
+        run: |
+          aws eks update-kubeconfig \
+            --name "$TF_VAR_cluster_name" \
+            --region "$TF_VAR_region"
+          kubectl cluster-info
       - name: Migrate deployment state identity
         run: |
           if terraform state list | grep -Fxq "kubernetes_deployment_v1.service"; then
