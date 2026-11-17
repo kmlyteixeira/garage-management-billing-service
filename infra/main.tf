@@ -41,6 +41,10 @@ resource "kubernetes_deployment_v1" "service" {
               }
             }
           }
+          env {
+            name  = "RabbitMq__Uri"
+            value = "amqp://rabbitmq:5672/"
+          }
           readiness_probe {
             http_get {
               path = "/health"
