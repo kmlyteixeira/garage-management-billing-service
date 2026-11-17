@@ -40,4 +40,17 @@ jobs:
             terraform import kubernetes_deployment_v1.service garage-microservices/billing-service
           fi
       - run: terraform plan -out=tfplan
-      - run: terraform apply -auto-approve tfplan
+      - name: Apply Terraform
+        run: |
+          set +e
+          terraform apply -auto-approve tfplan
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "::group::Billing deployment status"
+            kubectl get deployment billing-service -n garage-microservices -o wide || true
+            kubectl get pods -n garage-microservices -l app=billing-service -o wide || true
+            kubectl describe deployment billing-service -n garage-microservices || true
+            kubectl get events -n garage-microservices --sort-by=.lastTimestamp | tail -n 40 || true
+            echo "::endgroup::"
+            exit "$status"
+          fi
